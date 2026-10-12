@@ -68,6 +68,9 @@ class GameJolt
 	@:noCompletion
 	private static var private_key:Null<String>;
 
+	private static var username:Null<String>;
+	private static var usertoken:Null<String>;
+
 	/**
 	 * Initializes the Game ID and private key for API usage.
 	 * 
@@ -178,17 +181,39 @@ class GameJolt
 			{
 				if (Response.onSucceed != null)
 					Response.onSucceed();
+
+				username = UserName;
+				usertoken = UserToken;
 			};
 
 			gjHttp.onFail = function(message:String):Void
 			{
 				if (Response.onFail != null)
 					Response.onFail(message);
+
+				username = null;
+				usertoken = null;
 			};
 		}
 
 		return gjHttp;
 	}
+
+	@:deprecated("Use openSession() instead")
+	public static function openSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return openSession(Response);
+
+	@:deprecated("Use pingSession() instead")
+	public static function pingSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return pingSession(Response);
+
+	@:deprecated("Use checkSession() instead")
+	public static function checkSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return checkSession(Response);
+
+	@:deprecated("Use closeSession() instead")
+	public static function closeSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return closeSession(Response);
 
 	/**
 	 * Opens a game session for a particular user and allows you to tell Game Jolt that a user is playing your game.
@@ -196,12 +221,10 @@ class GameJolt
 	 * You must ping the session to keep it active and you must close it when you're done with it.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/sessions/open
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The callback object containing callbacks.
 	 * @return The configured HTTP request.
 	 */
-	public static function openSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function openSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -211,7 +234,7 @@ class GameJolt
 		}
 
 		@:nullSafety(Off)
-		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/open', ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'], private_key);
+		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/open', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
 		if (Response != null)
 		{
@@ -239,13 +262,11 @@ class GameJolt
 	 * You can also let the system know whether the player is in an active or idle state within your game.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/sessions/ping
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Status Sets the status of the session.
 	 * @param Response The callback object containing callbacks.
 	 * @return The configured HTTP request.
 	 */
-	public static function pingSessions(UserName:String, UserToken:String, ?Status:Null<GJStatus>, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function pingSession(?Status:Null<GJStatus>, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -260,7 +281,7 @@ class GameJolt
 			gjParams.push('status=${Status.getName().toLowerCase()}');
 
 		@:nullSafety(Off)
-		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/ping', gjParams.concat(['username=$UserName', 'user_token=$UserToken']), private_key);
+		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/ping', gjParams.concat(['username=$username', 'user_token=$usertoken']), private_key);
 
 		if (Response != null)
 		{
@@ -286,12 +307,10 @@ class GameJolt
 	 * Can be used to see if a particular user account is active in the game.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/sessions/check
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The callback object containing callbacks.
 	 * @return The configured HTTP request.
 	 */
-	public static function checkSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function checkSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -301,7 +320,7 @@ class GameJolt
 		}
 
 		@:nullSafety(Off)
-		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/check', ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'], private_key);
+		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/check', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
 		if (Response != null)
 		{
@@ -325,12 +344,10 @@ class GameJolt
 	 * Closes the active session.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/sessions/close
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The callback object containing callbacks.
 	 * @return The configured HTTP request.
 	 */
-	public static function closeSessions(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function closeSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -340,7 +357,7 @@ class GameJolt
 		}
 
 		@:nullSafety(Off)
-		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/close', ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'], private_key);
+		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/close', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
 		if (Response != null)
 		{
@@ -364,17 +381,15 @@ class GameJolt
 	 * Adds a score.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/scores/add
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
-	 * @param Guest The guest's name.
 	 * @param Score This is a string value associated with the score. Example: 500 Points
 	 * @param Sort This is a numerical sorting value associated with the score. All sorting will be based on this number. Example: 500
 	 * @param ExtraData If there's any extra data you would like to store as a string, you can use this variable.
 	 * @param TableID The ID of the score table to submit to.
+	 * @param Guest The guest's name.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function addScore(?UserName:String, ?UserToken:String, ?Guest:String, Score:String, Sort:Int, ?ExtraData:String, ?TableID:Int,
+	public static function addScore(Score:String, Sort:Int, ?ExtraData:String, ?TableID:Int, ?Guest:String,
 			?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
@@ -386,10 +401,10 @@ class GameJolt
 
 		final gjParams:Array<String> = ['game_id=$game_id', 'score=$Score', 'sort=$Sort'];
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 		else if (Guest != null && Guest.length > 0)
 			gjParams.push('guest=$Guest');
@@ -471,15 +486,13 @@ class GameJolt
 	 * @see https://gamejolt.com/game-api/doc/scores/fetch
 	 * @param Limit The number of scores you'd like to return.
 	 * @param TableID The ID of the score table.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Guest The guest's name.
 	 * @param BetterThan Fetch only scores better than this score sort value.
 	 * @param WorseThan Fetch only scores worse than this score sort value.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function fetchScore(?Limit:Int = 10, ?TableID:Int, ?UserName:String, ?UserToken:String, ?Guest:String, ?BetterThan:Int, ?WorseThan:Int,
+	public static function fetchScore(?Limit:Int = 10, ?TableID:Int, ?Guest:String, ?BetterThan:Int, ?WorseThan:Int,
 			?Response:GameJoltTypeCallback<Array<GJScore>>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
@@ -497,10 +510,10 @@ class GameJolt
 		if (TableID != null)
 			gjParams.push('table_id=$TableID');
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 		else if (Guest != null && Guest.length > 0)
 			gjParams.push('guest=$Guest');
@@ -608,14 +621,12 @@ class GameJolt
 	 * Fetches one or multiple trophies based on the provided parameters.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/trophies/fetch
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Achieved If true, fetches only achieved trophies. If false, fetches only unachieved trophies. If null, fetches all trophies. Ignored if `TrophyID` is provided.
 	 * @param TrophyID A list of trophy IDs to fetch. If provided, only these trophies are returned, and `Achieved` is ignored.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function fetchTrophy(UserName:String, UserToken:String, ?Achieved:Null<Bool>, ?TrophyID:Array<Int>,
+	public static function fetchTrophy(?Achieved:Null<Bool>, ?TrophyID:Array<Int>,
 			?Response:GameJoltTypeCallback<Array<GJTrophy>>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
@@ -625,7 +636,7 @@ class GameJolt
 			#end
 		}
 
-		final gjParams:Array<String> = ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'];
+		final gjParams:Array<String> = ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'];
 
 		if (TrophyID != null && TrophyID.length > 0)
 			gjParams.push('trophy_id=' + TrophyID.join(','));
@@ -671,17 +682,23 @@ class GameJolt
 		return gjHttp;
 	}
 
+	@:deprecated("Use achieveTrophy() instead")
+	inline public static function addTrophy(UserName:String, UserToken:String, TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return achieveTrophy(TrophyID, Response);
+
+	@:deprecated("Use revokeTrophy() instead")
+	inline public static function removeTrophy(UserName:String, UserToken:String, TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
+		return revokeTrophy(TrophyID, Response);
+
 	/**
 	 * Sets a trophy as achieved for a particular user.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/trophies/add-achieved
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param TrophyID The ID of the trophy to add for the user.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function addTrophy(UserName:String, UserToken:String, TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function achieveTrophy(TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -693,8 +710,8 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('trophies/add-achieved', [
 			'game_id=$game_id',
-			'username=$UserName',
-			'user_token=$UserToken',
+			'username=$username',
+			'user_token=$usertoken',
 			'trophy_id=$TrophyID'
 		], private_key);
 
@@ -720,13 +737,11 @@ class GameJolt
 	 * Remove a previously achieved trophy for a particular user.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/trophies/remove-achieved
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param TrophyID The ID of the trophy to remove from the user.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function removeTrophy(UserName:String, UserToken:String, TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function revokeTrophy(TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -738,8 +753,8 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('trophies/remove-achieved', [
 			'game_id=$game_id',
-			'username=$UserName',
-			'user_token=$UserToken',
+			'username=$username',
+			'user_token=$usertoken',
 			'trophy_id=$TrophyID'
 		], private_key);
 
@@ -766,12 +781,10 @@ class GameJolt
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/data-store/fetch
 	 * @param Key The key of the data item you'd like to fetch.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function fetchDataFromDataStore(Key:String, ?UserName:String, ?UserToken:String, ?Response:GameJoltTypeCallback<String>):GameJoltHttp
+	public static function fetchDataFromDataStore(Key:String, ?Response:GameJoltTypeCallback<String>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -782,10 +795,10 @@ class GameJolt
 
 		final gjParams:Array<String> = ['game_id=$game_id', 'key=$Key'];
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 
 		@:nullSafety(Off)
@@ -814,12 +827,10 @@ class GameJolt
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/data-store/get-keys
 	 * @param Pattern The pattern to apply to the key names in the data store.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function getDataStoreKeys(?Pattern:String, ?UserName:String, ?UserToken:String, ?Response:GameJoltTypeCallback<Array<String>>):GameJoltHttp
+	public static function getDataStoreKeys(?Pattern:String, ?Response:GameJoltTypeCallback<Array<String>>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -833,10 +844,10 @@ class GameJolt
 		if (Pattern != null && Pattern.length > 0)
 			gjParams.push('pattern=' + Pattern);
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 
 		@:nullSafety(Off)
@@ -883,12 +894,10 @@ class GameJolt
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/data-store/remove
 	 * @param Key The key of the data item you'd like to remove.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function removeDataFromDataStore(Key:String, ?UserName:String, ?UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function removeDataFromDataStore(Key:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -899,10 +908,10 @@ class GameJolt
 
 		final gjParams:Array<String> = ['game_id=$game_id', 'key=$Key'];
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 
 		@:nullSafety(Off)
@@ -932,12 +941,10 @@ class GameJolt
 	 * @see https://gamejolt.com/game-api/doc/data-store/set
 	 * @param Key The key of the data item you'd like to set.
 	 * @param Data The data you'd like to set.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function setDataToDataStore(Key:String, Data:String, ?UserName:String, ?UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
+	public static function setDataToDataStore(Key:String, Data:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -948,10 +955,10 @@ class GameJolt
 
 		final gjParams:Array<String> = ['game_id=$game_id', 'key=$Key', 'data=$Data'];
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 
 		@:nullSafety(Off)
@@ -982,12 +989,10 @@ class GameJolt
 	 * @param Key The key of the data item you'd like to update.
 	 * @param Operation The operation you'd like to perform.
 	 * @param Value The value you'd like to apply to the data store item.
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The response callbacks for success and failure cases.
 	 * @return The configured HTTP request.
 	 */
-	public static function updateDataFromDataStore(Key:String, Operation:String, Value:OneOfTwo<String, Int>, ?UserName:String, ?UserToken:String,
+	public static function updateDataFromDataStore(Key:String, Operation:String, Value:OneOfTwo<String, Int>,
 			?Response:GameJoltTypeCallback<OneOfTwo<String, Int>>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
@@ -999,10 +1004,10 @@ class GameJolt
 
 		final gjParams:Array<String> = ['game_id=$game_id', 'key=$Key', 'operation=$Operation', 'value=$Value'];
 
-		if ((UserName != null && UserName.length > 0) && (UserToken != null && UserToken.length > 0))
+		if ((username != null && username.length > 0) && (usertoken != null && usertoken.length > 0))
 		{
-			gjParams.push('username=$UserName');
-			gjParams.push('user_token=$UserToken');
+			gjParams.push('username=$username');
+			gjParams.push('user_token=$usertoken');
 		}
 
 		@:nullSafety(Off)
@@ -1030,12 +1035,10 @@ class GameJolt
 	 * Fetches the list of a user's friends.
 	 * 
 	 * @see https://gamejolt.com/game-api/doc/friends/fetch
-	 * @param UserName The user's username.
-	 * @param UserToken The user's token.
 	 * @param Response The callback object containing callbacks.
 	 * @return The configured HTTP request.
 	 */
-	public static function fetchFriends(UserName:String, UserToken:String, ?Response:GameJoltTypeCallback<Array<GJFriend>>):GameJoltHttp
+	public static function fetchFriends(?Response:GameJoltTypeCallback<Array<GJFriend>>):GameJoltHttp
 	{
 		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
 		{
@@ -1045,7 +1048,7 @@ class GameJolt
 		}
 
 		@:nullSafety(Off)
-		final gjHttp:GameJoltHttp = new GameJoltHttp('friends', ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'], private_key);
+		final gjHttp:GameJoltHttp = new GameJoltHttp('friends', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
 		if (Response != null)
 		{
