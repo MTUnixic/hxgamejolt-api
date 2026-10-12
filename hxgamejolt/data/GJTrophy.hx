@@ -1,6 +1,13 @@
 package hxgamejolt.data;
 
+import haxe.Json;
 import hxgamejolt.util.OneOfTwo;
+
+@:deprecated("Use GJTrophyDifficulty instead")
+typedef TrophyDifficulty = GJTrophyDifficulty;
+
+@:deprecated("Use GJTrophy instead")
+typedef Trophy = GJTrophy;
 
 /**
  * The difficulty level of the trophy.
@@ -69,5 +76,23 @@ class GJTrophy
 		parts.push('Image URL: $imageUrl');
 		parts.push('Achieved: $achieved');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the Trophy object.
+	 *
+	 * @return A string containing all the JSON properties of the Trophy object.
+	 */
+	@:keep
+	public function toJson():String
+	{
+		return Json.stringify({
+			id: id,
+			title: title,
+			description: description,
+			difficulty: difficulty,
+			image_url: imageUrl,
+			achieved: achieved
+		});
 	}
 }

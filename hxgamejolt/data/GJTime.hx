@@ -1,5 +1,10 @@
 package hxgamejolt.data;
 
+import haxe.Json;
+
+@:deprecated("Use GJTime instead")
+typedef Time = GJTime
+
 /**
  * A time object from the GameJolt API.
  */
@@ -42,5 +47,25 @@ class GJTime
 		parts.push('Timezone: $timezone');
 		parts.push('Date: $date');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the Time object.
+	 *
+	 * @return A string containing all the JSON properties of the Time object.
+	 */
+	@:keep
+	public function toJson():String
+	{
+		return Json.stringify({
+			timestamp: timestamp,
+			timezone: timezone,
+			year: date.getFullYear(),
+			month: date.getMonth() + 1, // Date() months start from 0
+			day: date.getDate(),
+			hour: date.getHours(),
+			minute: date.getMinutes(),
+			second: date.getSeconds()
+		});
 	}
 }

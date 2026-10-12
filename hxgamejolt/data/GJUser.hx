@@ -1,5 +1,13 @@
 package hxgamejolt.data;
 
+import haxe.Json;
+
+@:deprecated("Use GJUserType instead") typedef UserType = GJUserType;
+@:deprecated("Use GJUserStatus instead") typedef UserStatus = GJUserStatus;
+
+@:deprecated("Use GJUser instead")
+typedef User = GJUser;
+
 /**
  * The type of the user.
  */
@@ -106,5 +114,29 @@ class GJUser
 		parts.push('Developer Website: $developerWebsite');
 		parts.push('Developer Description: $developerDescription');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the User object.
+	 *
+	 * @return A string containing all the JSON properties of the User object.
+	 */
+	@:keep
+	public function toJson():String
+	{
+		return Json.stringify({
+			id: id,
+			type: type,
+			userName: userName,
+			avatarUrl: avatarUrl,
+			signedUp: signedUp,
+			signedUpTimestamp: signedUpTimestamp,
+			lastLoggedIn: lastLoggedIn,
+			lastLoggedInTimestamp: lastLoggedInTimestamp,
+			status: status,
+			developerName: developerName,
+			developerWebsite: developerWebsite,
+			developerDescription: developerDescription
+		});
 	}
 }

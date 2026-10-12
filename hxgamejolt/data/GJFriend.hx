@@ -1,5 +1,10 @@
 package hxgamejolt.data;
 
+import haxe.Json;
+
+@:deprecated("Use GJFriend instead")
+typedef Friend = GJFriend;
+
 /**
  * A friend object from the GameJolt API.
  */
@@ -31,5 +36,15 @@ class GJFriend
 		final parts:Array<String> = [];
 		parts.push('Friend ID: $friendId');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the Friend object.
+	 *
+	 * @return A string containing all the JSON properties of the Friend object.
+	 */
+	@:keep
+	public function toJson():String {
+		return Json.stringify({ friend_id: friendId });
 	}
 }

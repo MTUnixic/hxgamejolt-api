@@ -1,5 +1,9 @@
 package hxgamejolt.data;
 
+import haxe.Json;
+
+@:deprecated("Use GJTable instead")
+typedef Table = GJTable;
 /**
  * A score table object from the GameJolt API.
  */
@@ -46,5 +50,21 @@ class GJTable
 		parts.push('Description: $description');
 		parts.push('Primary: $primary');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the Table object.
+	 *
+	 * @return A string containing all the JSON properties of the Table object.
+	 */
+	@:keep
+	public function toJson():String
+	{
+		return Json.stringify({
+			id: id,
+			name: name,
+			description: description,
+			primary: primary // https://gamejolt.com/game-api/doc/scores/tables says primary:Bool even tho you used (data.primary == '1') so i'll just follow gamejolt
+		});
 	}
 }

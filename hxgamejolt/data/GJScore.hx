@@ -1,5 +1,10 @@
 package hxgamejolt.data;
 
+import haxe.Json;
+
+@:deprecated("Use GJScore instead")
+typedef Score = GJScore;
+
 /**
  * A score object from the GameJolt API.
  */
@@ -66,5 +71,25 @@ class GJScore
 		parts.push('Stored: $stored');
 		parts.push('Stored Timestamp: $storedTimestamp');
 		return parts.join('\n');
+	}
+
+	/**
+	 * Returns a JSON representation of the Score object.
+	 * 
+	 * @return A string containing all the JSON properties of the Score object.
+	 */
+	@:keep
+	public function toJson():String
+	{
+		return Json.stringify({
+			score: score,
+			sort: sort,
+			extra_data: extraData,
+			user: user,
+			user_id: userId,
+			guest: guest,
+			stored: stored,
+			stored_timestamp: storedTimestamp
+		});
 	}
 }
