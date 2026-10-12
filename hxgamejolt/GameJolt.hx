@@ -71,6 +71,9 @@ class GameJolt
 	private static var username:Null<String>;
 	private static var usertoken:Null<String>;
 
+	/** returns the last error recieved from the last `GameJoltHttp` call **/
+	public static var lastError:Null<String>;
+
 	/**
 	 * Initializes the Game ID and private key for API usage.
 	 * 
