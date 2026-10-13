@@ -2,6 +2,12 @@ package hxgamejolt.data;
 
 import hxgamejolt.util.OneOfTwo;
 
+@:deprecated("Use GJTrophyDifficulty instead")
+typedef TrophyDifficulty = GJTrophyDifficulty;
+
+@:deprecated("Use GJTrophy instead")
+typedef Trophy = GJTrophy;
+
 /**
  * The difficulty level of the trophy.
  */

@@ -1,5 +1,7 @@
 package hxgamejolt.data;
 
+@:deprecated("Use GJTable instead")
+typedef Table = GJTable;
 /**
  * A score table object from the GameJolt API.
  */

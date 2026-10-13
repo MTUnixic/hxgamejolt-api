@@ -1,5 +1,8 @@
 package hxgamejolt.data;
 
+@:deprecated("Use GJFriend instead")
+typedef Friend = GJFriend;
+
 /**
  * A friend object from the GameJolt API.
  */

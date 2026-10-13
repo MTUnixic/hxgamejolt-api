@@ -1,5 +1,8 @@
 package hxgamejolt.data;
 
+@:deprecated("Use GJScore instead")
+typedef Score = GJScore;
+
 /**
  * A score object from the GameJolt API.
  */

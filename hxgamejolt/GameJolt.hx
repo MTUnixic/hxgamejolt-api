@@ -9,6 +9,12 @@ import hxgamejolt.data.GJUser;
 import hxgamejolt.util.GameJoltHttp;
 import hxgamejolt.util.OneOfTwo;
 
+@:deprecated("Use GameJoltEmptyCallback instead")
+typedef EmptyResponseCallbacks = GameJoltEmptyCallback;
+
+@:deprecated("Use GameJoltTypeCallback<T> instead")
+typedef TypeResponseCallbacks<T> = GameJoltTypeCallback<T>;
+
 /**
  * Callbacks for handling responses without a return value.
  */

@@ -1,5 +1,8 @@
 package hxgamejolt.data;
 
+@:deprecated("Use GJTime instead")
+typedef Time = GJTime
+
 /**
  * A time object from the GameJolt API.
  */

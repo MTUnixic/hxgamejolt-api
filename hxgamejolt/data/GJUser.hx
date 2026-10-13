@@ -1,5 +1,11 @@
 package hxgamejolt.data;
 
+@:deprecated("Use GJUserType instead") typedef UserType = GJUserType;
+@:deprecated("Use GJUserStatus instead") typedef UserStatus = GJUserStatus;
+
+@:deprecated("Use GJUser instead")
+typedef User = GJUser;
+
 /**
  * The type of the user.
  */
