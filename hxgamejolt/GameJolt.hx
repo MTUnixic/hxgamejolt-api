@@ -71,8 +71,29 @@ class GameJolt
 	private static var username:Null<String>;
 	private static var usertoken:Null<String>;
 
-	/** returns the last error recieved from the last `GameJoltHttp` call **/
+	/** Returns the last API error recieved (from the last `GameJoltHttp` call) **/
 	public static var lastError:Null<String>;
+
+	/** Checks to see if there's an open session for the user (can be used to see if a particular user account is active in-game) **/
+	public static var sessionOpen(default, null):Bool = false;
+
+	/** Self-explanatory **/
+	public static var loggedIn(default, null):Bool = false;
+
+	/** Checks to see if you successfully initialized GameJolt API using `init()` **/ // mainly for anyone using the api since init doesnt really say so
+	public static var initialized(default, null):Bool = false;
+
+	/** Checks if the game is hosted on `gamejolt.net` **/
+	public static var onGameJolt(get, never):Bool;
+
+	/** Whether or not the user is logged in on the GameJolt's website (game must be played on `gamejolt.net`!) **/
+	public static var autoLoginAvailable(get, never):Bool;
+
+	static function get_onGameJolt():Bool // checks if www. --> johnwebsite.ext <-- (THIS!!) ends with what we want
+		return #if js StringTools.endsWith(js.Browser.window.location.hostname, "gamejolt.net") #else false #end;
+
+	static function get_autoLoginAvailable():Bool
+		return #if js getCredentials().name != null && getCredentials().token != null #else false #end;
 
 	/**
 	 * Initializes the Game ID and private key for API usage.
@@ -102,7 +123,7 @@ class GameJolt
 	 */
 	public static function fetchUser(UserName:String, UserID:Array<Int>, ?Response:GameJoltTypeCallback<Array<GJUser>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -168,7 +189,7 @@ class GameJolt
 	 */
 	public static function authUser(UserName:String, UserToken:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -178,28 +199,66 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('users/auth', ['game_id=$game_id', 'username=$UserName', 'user_token=$UserToken'], private_key);
 
-		if (Response != null)
+		gjHttp.onSucceed = function(data:Dynamic):Void
 		{
-			gjHttp.onSucceed = function(data:Dynamic):Void
-			{
+			loggedIn = true;
+
+			if (Response != null)
 				if (Response.onSucceed != null)
 					Response.onSucceed();
 
-				username = UserName;
-				usertoken = UserToken;
-			};
+			username = UserName;
+			usertoken = UserToken;
+		};
 
-			gjHttp.onFail = function(message:String):Void
-			{
+		gjHttp.onFail = function(message:String):Void
+		{
+			loggedIn = false;
+
+			if (Response != null)
 				if (Response.onFail != null)
 					Response.onFail(message);
 
-				username = null;
-				usertoken = null;
-			};
-		}
+			username = null;
+			usertoken = null;
+		};
 
 		return gjHttp;
+	}
+
+	/**
+	 * Logs out the user and closes their session.
+	 * 
+	 * @see https://gamejolt.com/game-api/doc/sessions/close
+	 * @param UserName The user's username.
+	 * @param UserToken The user's token.
+	 * @param Response The callback object containing callbacks.
+	 */
+	public static function logoutUser(?Response:GameJoltEmptyCallback):Void
+	{
+		if (!initialized)
+		{
+			#if HXGAMEJOLT_LOGGING
+			trace('Missing Game ID or Private Key.');
+			#end
+		}
+
+		closeSession( {
+			onSucceed: function():Void
+			{
+				loggedIn = false;
+
+				if (Response != null)
+					if (Response.onSucceed != null)
+						Response.onSucceed();
+			},
+			onFail: function(message:String):Void
+			{
+				if (Response != null)
+					if (Response.onFail != null)
+						Response.onFail(message);
+			}
+		}).requestData();
 	}
 
 	@:deprecated("Use openSession() instead")
@@ -229,7 +288,7 @@ class GameJolt
 	 */
 	public static function openSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -239,20 +298,21 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/open', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
-		if (Response != null)
+		gjHttp.onSucceed = function(data:Dynamic):Void
 		{
-			gjHttp.onSucceed = function(data:Dynamic):Void
-			{
+			sessionOpen = true;
+
+			if (Response != null)
 				if (Response.onSucceed != null)
 					Response.onSucceed();
-			};
+		};
 
-			gjHttp.onFail = function(message:String):Void
-			{
+		gjHttp.onFail = function(message:String):Void
+		{
+			if (Response != null)
 				if (Response.onFail != null)
 					Response.onFail(message);
-			};
-		}
+		};
 
 		return gjHttp;
 	}
@@ -271,7 +331,7 @@ class GameJolt
 	 */
 	public static function pingSession(?Status:Null<GJStatus>, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -315,7 +375,7 @@ class GameJolt
 	 */
 	public static function checkSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -325,20 +385,23 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/check', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
-		if (Response != null)
+		gjHttp.onSucceed = function(data:Dynamic):Void
 		{
-			gjHttp.onSucceed = function(data:Dynamic):Void
-			{
+			sessionOpen = true;
+
+			if (Response != null)
 				if (Response.onSucceed != null)
 					Response.onSucceed();
-			};
+		};
 
-			gjHttp.onFail = function(message:String):Void
-			{
+		gjHttp.onFail = function(message:String):Void
+		{
+			sessionOpen = false;
+
+			if (Response != null)
 				if (Response.onFail != null)
 					Response.onFail(message);
-			};
-		}
+		};
 
 		return gjHttp;
 	}
@@ -352,7 +415,7 @@ class GameJolt
 	 */
 	public static function closeSession(?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -362,20 +425,21 @@ class GameJolt
 		@:nullSafety(Off)
 		final gjHttp:GameJoltHttp = new GameJoltHttp('sessions/close', ['game_id=$game_id', 'username=$username', 'user_token=$usertoken'], private_key);
 
-		if (Response != null)
+		gjHttp.onSucceed = function(data:Dynamic):Void
 		{
-			gjHttp.onSucceed = function(data:Dynamic):Void
-			{
+			sessionOpen = false;
+
+			if (Response != null)
 				if (Response.onSucceed != null)
 					Response.onSucceed();
-			};
+		};
 
-			gjHttp.onFail = function(message:String):Void
-			{
+		gjHttp.onFail = function(message:String):Void
+		{
+			if (Response != null)
 				if (Response.onFail != null)
 					Response.onFail(message);
-			};
-		}
+		};
 
 		return gjHttp;
 	}
@@ -395,7 +459,7 @@ class GameJolt
 	public static function addScore(Score:String, Sort:Int, ?ExtraData:String, ?TableID:Int, ?Guest:String,
 			?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -450,7 +514,7 @@ class GameJolt
 	 */
 	public static function getScoreRank(Sort:Int, ?TableID:Int, ?Response:GameJoltTypeCallback<Int>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -498,7 +562,7 @@ class GameJolt
 	public static function fetchScore(?Limit:Int = 10, ?TableID:Int, ?Guest:String, ?BetterThan:Int, ?WorseThan:Int,
 			?Response:GameJoltTypeCallback<Array<GJScore>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -574,7 +638,7 @@ class GameJolt
 	 */
 	public static function scoreTables(?Response:GameJoltTypeCallback<Array<GJTable>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -632,7 +696,7 @@ class GameJolt
 	public static function fetchTrophy(?Achieved:Null<Bool>, ?TrophyID:Array<Int>,
 			?Response:GameJoltTypeCallback<Array<GJTrophy>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -703,7 +767,7 @@ class GameJolt
 	 */
 	public static function achieveTrophy(TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -746,7 +810,7 @@ class GameJolt
 	 */
 	public static function revokeTrophy(TrophyID:Int, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -789,7 +853,7 @@ class GameJolt
 	 */
 	public static function fetchDataFromDataStore(Key:String, ?Response:GameJoltTypeCallback<String>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -835,7 +899,7 @@ class GameJolt
 	 */
 	public static function getDataStoreKeys(?Pattern:String, ?Response:GameJoltTypeCallback<Array<String>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -902,7 +966,7 @@ class GameJolt
 	 */
 	public static function removeDataFromDataStore(Key:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -949,7 +1013,7 @@ class GameJolt
 	 */
 	public static function setDataToDataStore(Key:String, Data:String, ?Response:GameJoltEmptyCallback):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -998,7 +1062,7 @@ class GameJolt
 	public static function updateDataFromDataStore(Key:String, Operation:String, Value:OneOfTwo<String, Int>,
 			?Response:GameJoltTypeCallback<OneOfTwo<String, Int>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -1043,7 +1107,7 @@ class GameJolt
 	 */
 	public static function fetchFriends(?Response:GameJoltTypeCallback<Array<GJFriend>>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -1098,7 +1162,7 @@ class GameJolt
 	 */
 	public static function fetchTime(?Response:GameJoltTypeCallback<GJTime>):GameJoltHttp
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -1137,7 +1201,7 @@ class GameJolt
 	 */
 	public static function batchRequest(?Parallel:Bool, ?BreakOnError:Bool, Requests:Array<GameJoltHttp>, ?Response:GameJoltEmptyCallback):Void
 	{
-		if ((game_id == null || game_id.length == 0) || (private_key == null || private_key.length == 0))
+		if (initialized)
 		{
 			#if HXGAMEJOLT_LOGGING
 			trace('Missing Game ID or Private Key.');
@@ -1185,4 +1249,76 @@ class GameJolt
 
 		gjHttp.requestData();
 	}
+
+	// useful utils for using the client on GameJolt
+	#if js
+
+	/**
+	 * Tries to do an automatic login using GameJolt's credentials.
+	 * (doesn't find the Game ID and Private Key for you, you have to define that in `init()`)
+	 * @param Response The response callbacks for success and failure cases.
+	 */
+	public static function loginAutomatically(?Response:GameJoltEmptyCallback):Void
+	{
+		if (!autoLoginAvailable)
+			throw "couldn't fetch user credentials, maybe you aren't running the window in a gamejolt client?";
+
+		final cred = getCredentials();
+
+		authUser(cred.name, cred.token,
+		{
+			onSucceed: function():Void
+			{
+				if (Response != null)
+					if (Response.onSucceed != null)
+						Response.onSucceed();
+			},
+			onFail: function(message:String):Void
+			{
+				if (Response != null)
+					if (Response.onFail != null)
+						Response.onFail(message);
+			}
+		}).requestData();
+	}
+
+	/**
+	 * Finds the username and usertoken automatically from the GameJolt web client's internal link.
+	 *
+	 * @returns an object with a user `name:String` and it's `token:String`
+	 */
+	@:nullSafety(Off) // otherwise haxe complains
+	public static function getCredentials():{name:String, token:String}
+	{
+		final query = js.Browser.window.location.search; // https://www.johnwebsite.ext/ -> ?q=x&y=z.... <- grabs THIS!!! (has name and token)
+		final params = findQuerySetsFrom(query);
+
+		// what gamejolt calls them
+		final uQuery = "gjapi_username", tQuery = "gjapi_token";
+
+		final name = params.get(uQuery);
+		final token = params.get(tQuery);
+
+		return {name: name, token: token};
+	}
+
+	/* splits every query connected with "&" key=value into a key -> value map */
+	static function findQuerySetsFrom(query:String):Null<Map<String, String>> {
+		final pairs = query.substr(1).split("&"); // splits query by key value pairs
+		var params = new Map<String, String>();
+
+		for (pair in pairs) {
+			if (pair.length == 0 || pair.indexOf("=") == -1) continue; // just in case if the key/value pair is invalid
+
+			final key = pair.split("=")[0];
+			final value = pair.split("=")[1];
+
+			if (key.length > 0 && value.length > 0)
+				params.set(key, value);
+		}
+
+		return params;
+	}
+
+	#end
 }
