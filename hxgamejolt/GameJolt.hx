@@ -68,6 +68,9 @@ class GameJolt
 	@:noCompletion
 	private static var private_key:Null<String>;
 
+	/** returns the last API error recieved (from the last `GameJoltHttp` call) */
+	public static var lastError:Null<String>;
+
 	/**
 	 * Initializes the Game ID and private key for API usage.
 	 * 

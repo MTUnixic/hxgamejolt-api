@@ -129,11 +129,15 @@ class GameJoltHttp
 		{
 			Reflect.deleteField(response, 'success');
 
+			GameJolt.lastError = null;
+
 			if (onSucceed != null)
 				onSucceed(response);
 		}
 		else if (response.message != null && response.message.length > 0)
 		{
+			GameJolt.lastError = response.message;
+			
 			if (onFail != null)
 				onFail(response.message);
 		}
@@ -142,6 +146,8 @@ class GameJoltHttp
 	@:noCompletion
 	private function dispatchFail(message:String):Void
 	{
+		GameJolt.lastError = message;
+
 		if (onFail != null)
 			onFail(message);
 	}
